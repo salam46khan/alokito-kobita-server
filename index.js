@@ -34,6 +34,7 @@ async function run() {
         const faqCollection = client.db("alokitoKobitaDB").collection("faqs")
         const reviewCollection = client.db("alokitoKobitaDB").collection("reviews")
         const fevCollection = client.db("alokitoKobitaDB").collection("fev")
+        const userCollection = client.db("alokitoKobitaDB").collection("users")
 
 
         app.get('/poems', async (req, res) => {
@@ -130,6 +131,44 @@ async function run() {
             res.send(result)
         })
 
+
+        app.post('/users', async (req, res)=>{
+            const user = req.body;
+            
+            const query = {email :  user.email}
+            const existingUser = await userCollection.findOne(query)
+            if(existingUser){
+                return res.send({message: 'user exists', insertedId: null}) 
+            }
+            const result = await userCollection.insertOne(user);
+            res.send(result)
+        })
+        app.get('/user', async(req, res)=>{
+            let query ={}
+            if(req.query?.email){
+                query = {email: req.query.email}
+            }
+            const cursor = userCollection.find(query)
+            const result = await cursor.toArray()
+            res.send(result)
+        })
+        app.put('/user/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatePro = req.body;
+            // console.log(updatePro);
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const update = {
+              $set: {
+                address: updatePro.address,
+                phone: updatePro.phone,
+                birthday: updatePro.birthday,
+                bio: updatePro.bio
+              }
+            }
+            const result = await userCollection.updateOne(filter, update, options)
+            res.send(result)
+          })
 
 
         // Send a ping to confirm a successful connection
